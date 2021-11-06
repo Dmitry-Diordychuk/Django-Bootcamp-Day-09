@@ -1,0 +1,63 @@
+{% extends 'account/base.html' %}
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<form "id_form" method="post">
+    {% csrf_token %}
+    <div id="id_container">
+    {% if user.is_authenticated %}
+        <p>Logged as {{ user.username }}</p>
+    {% else %}
+        {{ form }}
+    {% endif %}
+    </div>
+    <input id="submit" type="submit" value="{{ button }}">
+</form>
+{% endblock %}
+
+{% block javascript %}
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    var csrftoken = getCookie('csrftoken');
+
+    $("#submit").click(function (e) {
+        e.preventDefault();
+        console.log(
+            $('#id_username').val(),
+            $('#id_password').val(),
+        );
+        $.ajax({
+            url: '/account/',
+            type: "POST",
+            dataType: "json",
+            data: JSON.stringify({
+                'username': $('#id_username').val(),
+                'password': $('#id_password').val(),
+            }),
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+            success: (response) => {
+                $('#id_container').html(response['form'])
+                csrftoken = response['csrftoken']
+                $('#submit').val(response['button'])
+            },
+        });
+    })
+</script>
+{% endblock %}
